@@ -189,7 +189,7 @@ class ExploreScreen extends StatelessWidget {
                       itemCount: dataList.length + 1,
                       itemBuilder: (context, index) {
                         // Load more section footer
-                        if (index == exploreController.listofcities.length){
+                        if (index == exploreController.listofcities!.length){
                           return InkWell(
                             onTap: (){
                               exploreController.getCities(nextPages, 4);
@@ -214,7 +214,7 @@ class ExploreScreen extends StatelessWidget {
                           );
                         }
 
-                        final city = dataList[index];
+                        final city = exploreController.listofcities![index];
 
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 14),
