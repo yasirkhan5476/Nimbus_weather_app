@@ -4,22 +4,11 @@ import 'package:get/get.dart';
 import 'package:minbus_weather_app/Controller/ExploreController.dart';
 import 'package:minbus_weather_app/Utils/Appicons.dart';
 
-class ExploreScreen extends StatefulWidget {
-  const ExploreScreen({super.key});
+class ExploreScreen extends StatelessWidget {
+  ExploreScreen({super.key});
 
-  @override
-  State<ExploreScreen> createState() => _ExploreScreenState();
-}
-
-class _ExploreScreenState extends State<ExploreScreen> {
+  // Register the controller
   final Explorecontroller exploreController = Get.put(Explorecontroller());
-  final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,11 +16,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
       backgroundColor: const Color(0xFFF2F6FF),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Header
+              // Header
               Row(
                 children: [
                   const Expanded(
@@ -45,11 +34,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             color: Color(0xFF7183A7),
                           ),
                         ),
-                        SizedBox(height: 2),
+                        SizedBox(height: 4),
                         Text(
                           'Demo Student',
                           style: TextStyle(
-                            fontSize: 22,
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF102344),
                           ),
@@ -58,8 +47,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     ),
                   ),
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 44,
+                    height: 44,
                     alignment: Alignment.center,
                     decoration: const BoxDecoration(
                       color: Color(0xFF326BFF),
@@ -76,61 +65,54 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 ],
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // 2. Search bar
-              SizedBox(
-                height: 46,
-                child: TextField(
-                  controller: _searchController,
-                  style: const TextStyle(fontSize: 14, color: Color(0xFF0F1B2D)),
-                  decoration: InputDecoration(
-                    hintText: 'Search cities or countries...',
-                    hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF8B9BB8)),
-                    prefixIcon: const Icon(Icons.search, color: Color(0xFF60769C), size: 18),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: EdgeInsets.zero,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFFDCE5F8)),
+              // Search bar
+              Container(
+                height: 52,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFDCE5F8)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.search, color: Color(0xFF60769C)),
+                    SizedBox(width: 12),
+                    Text(
+                      'Search cities or countries...',
+                      style: TextStyle(fontSize: 14, color: Color(0xFF8B9BB8)),
                     ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFFDCE5F8)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: const BorderSide(color: Color(0xFF326BFF)),
-                    ),
-                  ),
+                  ],
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
 
-              // 3. Region filters
+              // Region filters wrapped in GetBuilder
               SizedBox(
-                height: 36,
+                height: 45,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  child: Obx(
-                        () => Row(
-                      children: exploreController.regions.map((region) {
-                        final bool selected =
-                            exploreController.selectedRegion.value == region;
+                  child: GetBuilder<Explorecontroller>(
+                    builder: (controller) => Row(
+                      children: controller.regions.map((region) {
+                        final bool selected = controller.selectedRegion == region;
 
                         return GestureDetector(
-                          onTap: () => exploreController.selectRegion(region),
+                          onTap: () => controller.selectRegion(region),
                           child: Container(
                             margin: const EdgeInsets.only(right: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            alignment: Alignment.center,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 18,
+                              vertical: 11,
+                            ),
                             decoration: BoxDecoration(
                               color: selected
                                   ? const Color(0xFF326BFF)
                                   : Colors.white,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(25),
                               border: Border.all(
                                 color: selected
                                     ? const Color(0xFF326BFF)
@@ -140,7 +122,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             child: Text(
                               region,
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w500,
                                 color: selected
                                     ? Colors.white
@@ -155,83 +137,99 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 ),
               ),
 
-              const SizedBox(height: 14),
+              const SizedBox(height: 18),
 
-              // 4. Cities heading & dynamic results count
+              // Cities heading & results count
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
                     'Cities',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF102344),
                     ),
                   ),
-                  Obx(
-                        () => Text(
-                      '${exploreController.responseModel.value.data?.length ?? 0} results',
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  GetBuilder<Explorecontroller>(
+                    builder: (controller) => Text(
+                      '${controller.responseModel.data?.length ?? 0} results',
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 14),
 
-              // 5. City ListView wrapped safely inside Expanded
               Expanded(
-                child: Obx(() {
-                  if (exploreController.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+                child: GetBuilder<Explorecontroller>(
+                  builder: (controller) {
+                    if (controller.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                  final dataList = exploreController.responseModel.value.data ?? [];
+                    final dataList = controller.responseModel.data ?? [];
+                    final meta = controller.responseModel.meta;
+                    int pagenumber = meta?.page ?? 0;
+                    int totalpages = meta?.totalPages ?? 0;
+                    int nextPages = pagenumber+1;
 
-                  if (dataList.isEmpty) {
-                    return const Center(child: Text("No cities found"));
-                  }
-
-                  return ListView.builder(
-                    padding: EdgeInsets.zero,
-                    itemCount: dataList.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == dataList.length) {
-                        return Container(
-                          height: 44,
-                          margin: const EdgeInsets.only(top: 2, bottom: 16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE2EBFF),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          alignment: Alignment.center,
-                          child: const Text(
-                            'Load more · page 2 of 3',
-                            style: TextStyle(
-                              color: Color(0xFF326BFF),
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        );
-                      }
-
-                      final city = dataList[index];
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: _buildCityCard(
-                          city: city.name ?? "",
-                          country: city.country ?? "",
-                          region: city.region ?? "",
-                          temperature: city.weather?.temperatureC?.toString() ?? "0",
-                          icon: city.weather?.condition?.icon ?? "",
+                    if (dataList.isEmpty) {
+                      return const Center(
+                        child: Text(
+                          "No cities found",
+                          style: TextStyle(color: Color(0xFF7183A7), fontSize: 14),
                         ),
                       );
-                    },
-                  );
-                }),
+                    }
+
+                    return ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: dataList.length + 1,
+                      itemBuilder: (context, index) {
+                        // Load more section footer
+                        if (index == exploreController.listofcities.length){
+                          return InkWell(
+                            onTap: (){
+                              exploreController.getCities(nextPages, 4);
+                            },
+                            child: Container(
+                              height: 48,
+                              margin: const EdgeInsets.only(top: 2, bottom: 16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE2EBFF),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                'Load more · page $pagenumber of $totalpages',
+                                style: const TextStyle(
+                                  color: Color(0xFF326BFF),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+
+                        final city = dataList[index];
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 14),
+                          child: _buildCityCard(
+                            city: city.name ?? "",
+                            country: city.country ?? "",
+                            region: city.region ?? "",
+                            temperature: city.weather?.temperatureC?.toString() ?? "0",
+                            icon: city.weather?.condition?.icon ?? "",
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -240,7 +238,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  // City card widget builder
+  // City card builder method
   Widget _buildCityCard({
     required String city,
     required String country,

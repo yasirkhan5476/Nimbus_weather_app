@@ -4,10 +4,11 @@ import 'package:minbus_weather_app/Services/Api_services/Api_Servcies.dart';
 import 'package:minbus_weather_app/Services/Api_services/Api_endpoints.dart';
 
 class Explorecontroller extends GetxController {
-  RxBool isLoading = false.obs;
-  Rx<GetCtiesModel> responseModel = GetCtiesModel().obs;
+  bool isLoading = false;
+  GetCtiesModel responseModel = GetCtiesModel();
+  List<Datum> listofcities = [];
 
-  // 1. Define the regions list here
+  // Define the regions list
   final List<String> regions = [
     'All',
     'Asia',
@@ -18,33 +19,45 @@ class Explorecontroller extends GetxController {
     'Oceania',
   ];
 
-  // 2. Define selected region observable
-  RxString selectedRegion = 'All'.obs;
+
+  String selectedRegion = 'All';
 
   @override
   void onInit() {
     super.onInit();
-    getCities(1, 10);
+    getCities(1, 4);
   }
 
-  // 3. Define selectRegion method
+
   void selectRegion(String region) {
-    selectedRegion.value = region;
+    selectedRegion = region;
+    update();
   }
 
   Future<void> getCities(int pages, int limit) async {
     try {
-      isLoading.value = true;
+      isLoading = true;
+      update(); // Show loading indicator
+
       var responseFromAPI = await ApiServcies().getMethod(
         ApiEndpoints.getCiteisurl(pages, limit),
       );
 
-      if (responseFromAPI != null) {
-        responseModel.value = GetCtiesModel.fromJson(responseFromAPI);
+      print("RAW API RESPONSE: $responseFromAPI");
+
+
+        responseModel = getCtiesModelFromJson(responseFromAPI);
+      for(var elements in responseModel.data!){
+        listofcities.add(elements);
       }
-      isLoading.value = false;
-    } catch (e) {
-      isLoading.value = false;
+      isLoading = false;
+      update();
+    } catch (e, stackTrace) {
+      isLoading = false;
+      update();
+      print("PARSING ERROR: $e");
+      print(stackTrace);
+
       Get.snackbar("Error", e.toString());
     }
   }

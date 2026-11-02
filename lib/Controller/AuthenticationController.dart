@@ -1,8 +1,13 @@
+import 'dart:convert';
+
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:minbus_weather_app/Screen/Auth/login_Screen.dart';
 import 'package:minbus_weather_app/Screen/Rootsrcreen.dart';
 import 'package:minbus_weather_app/Services/Api_services/Api_Servcies.dart';
 import 'package:minbus_weather_app/Services/Api_services/Api_endpoints.dart';
+import 'package:minbus_weather_app/Services/Local_storage/LocalStoragekey.dart';
+import 'package:minbus_weather_app/Services/Local_storage/Local_Storage_instance.dart';
 
 class AuthenticationController extends GetxController{
   RxBool isLoading = false.obs;
@@ -18,6 +23,9 @@ class AuthenticationController extends GetxController{
        Get.snackbar("Success", "User Logged In successfully!!");
        isLoading.value = false;
        print("Response From API " + responseFromApi.toString());
+       String tokenAccess = jsonDecode(responseFromApi)["token"];
+       // print("Access token ${tokenAccess}");
+       LocalStorageInstance.savedata(key:Localstoragekey.accessToken, dataToSave: tokenAccess);
        Get.offAll(()=>Rootsrcreen());
      }catch(e){
        isLoading.value = false;

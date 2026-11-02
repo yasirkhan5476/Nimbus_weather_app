@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:minbus_weather_app/Screen/Auth/login_Screen.dart';
+import 'package:minbus_weather_app/Screen/Rootsrcreen.dart';
+import 'package:minbus_weather_app/Services/Local_storage/LocalStoragekey.dart';
 import 'package:minbus_weather_app/Utils/Appcolors.dart';
 import 'package:minbus_weather_app/Utils/Appicons.dart';
+import 'package:minbus_weather_app/Services/Local_storage/Local_Storage_instance.dart';
+
+
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,8 +23,14 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+   // String Accesstoken = GetStorage().read(Localstoragekey.accessToken)??"";
+    String Accesstoken = LocalStorageInstance.getData(key: Localstoragekey.accessToken);
     Future.delayed(Duration(seconds:3),(){
-      Get.to(()=>LoginScreen());
+      if(Accesstoken==""){
+        Get.offAll(()=>LoginScreen());
+      }else{
+        Get.offAll(()=>Rootsrcreen());
+      }
     });
   }
   @override
