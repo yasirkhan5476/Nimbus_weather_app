@@ -18,10 +18,15 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final _formkey = GlobalKey<FormState>();
   bool isPasswordHidden = true;
 
   // Clean single controller instance
   final AuthenticationController authController = Get.put(AuthenticationController());
+  void _submit(){
+    if(!_formkey.currentState!.validate()) return;
+    AuthenticationController().login(emailController.text, passwordController.text);
+  }
 
   @override
   void dispose() {
@@ -85,33 +90,43 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 20),
 
                       // 3. Email Input Component
-                      Mytextfieldcomponent(
-                        label: "Email",
-                        hintText: "you@example.com",
-                        controller: emailController,
-                        keyboardType: TextInputType.emailAddress,
-                      ),
 
-                      const SizedBox(height: 20),
+                      Form(
+                        key: _formkey,
+                        child: Column(
+                          children: [
+                            Mytextfieldcomponent(
+                              label: "Email",
+                              hintText: "you@example.com",
+                              controller: emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              validator: (v)=>AuthenticationController.validateEmail(v??''),
+                            ),
 
-                      // 4. Password Input Component
-                      Mytextfieldcomponent(
-                        label: "Password",
-                        hintText: "Enter your password",
-                        controller: passwordController,
-                        isPassword: isPasswordHidden,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            isPasswordHidden
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                            color: Colors.grey,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              isPasswordHidden = !isPasswordHidden;
-                            });
-                          },
+                            const SizedBox(height: 20),
+
+                            // 4. Password Input Component
+                            Mytextfieldcomponent(
+                              label: "Password",
+                              hintText: "Enter your password",
+                              controller: passwordController,
+                              isPassword: isPasswordHidden,
+                              validator: (v)=>(v??"").isEmpty ?"Enter the password":null,
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  isPasswordHidden
+                                      ? Icons.visibility_outlined
+                                      : Icons.visibility_off_outlined,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    isPasswordHidden = !isPasswordHidden;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ),
 
@@ -142,10 +157,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         onTap: authController.isLoading.value
                             ? () {}
                             : () {
-                          authController.login(
-                            emailController.text.trim(),
-                            passwordController.text.trim(),
-                          );
+                          _submit();
                         },
                       )),
 

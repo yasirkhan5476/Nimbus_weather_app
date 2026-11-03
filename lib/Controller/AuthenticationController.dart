@@ -13,6 +13,7 @@ class AuthenticationController extends GetxController{
   RxBool isLoading = false.obs;
   RxList sampleList = [].obs;
 
+  static String? validateEmail(String value)=>RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value.trim())? null: "Enter a valid email";
    login(String email,String password) async{
      try{
        isLoading.value=true;

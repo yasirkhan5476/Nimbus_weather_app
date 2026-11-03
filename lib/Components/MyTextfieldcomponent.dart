@@ -11,6 +11,7 @@ class Mytextfieldcomponent extends StatefulWidget {
   final TextInputType keyboardType;
   // Added dynamic validator parameter
   final FormFieldValidator<String>? validator;
+  final FormFieldBuilder<String>? onChanged;
 
   const Mytextfieldcomponent({
     super.key,
@@ -22,6 +23,7 @@ class Mytextfieldcomponent extends StatefulWidget {
     this.prefixIcon,
     this.keyboardType = TextInputType.text,
     this.validator, // Initialized here
+    this.onChanged
   });
 
   @override
@@ -58,16 +60,7 @@ class _MytextfieldcomponentState extends State<Mytextfieldcomponent> {
           controller: widget.controller,
           obscureText: _obscureText,
           keyboardType: widget.keyboardType,
-
-          // Uses the dynamic validator passed from outside,
-          // or falls back to a default "cannot be empty" check if none is provided.
-          validator: widget.validator ?? (value) {
-            if (value == null || value.isEmpty) {
-              return "This field cannot be empty";
-            }
-            return null;
-          },
-
+          validator: widget.validator ,
           decoration: InputDecoration(
             hintText: widget.hintText,
             hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
@@ -104,7 +97,7 @@ class _MytextfieldcomponentState extends State<Mytextfieldcomponent> {
             ),
             errorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Colors.red, width: 1),
+              borderSide: const BorderSide(color: Colors.red, width: 1.5),
             ),
             focusedErrorBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),

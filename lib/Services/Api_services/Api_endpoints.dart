@@ -7,4 +7,7 @@ class ApiEndpoints {
   static String getCiteisurl(int page,int limit){
     return "${baseurl}/cities?page=${page}&limit=${limit}";
   }
+  static String Search(String search){
+    return "${baseurl}/cities?search=${search}";
+  }
 }

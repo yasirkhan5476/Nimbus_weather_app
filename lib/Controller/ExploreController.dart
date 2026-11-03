@@ -4,9 +4,12 @@ import 'package:minbus_weather_app/Services/Api_services/Api_Servcies.dart';
 import 'package:minbus_weather_app/Services/Api_services/Api_endpoints.dart';
 
 class Explorecontroller extends GetxController {
-  bool isLoading = false;
-  GetCtiesModel responseModel = GetCtiesModel();
-  List<Datum> listofcities = [];
+  // 1. Make variables reactive using .obs
+  RxBool isLoading = false.obs;
+  RxBool isMoreLoading = false.obs;
+  Rx<GetCtiesModel> responseModel = GetCtiesModel().obs;
+  RxList<Datum> listofcities = <Datum>[].obs;
+
 
   // Define the regions list
   final List<String> regions = [
@@ -19,8 +22,7 @@ class Explorecontroller extends GetxController {
     'Oceania',
   ];
 
-
-  String selectedRegion = 'All';
+  RxString selectedRegion = 'All'.obs;
 
   @override
   void onInit() {
@@ -28,16 +30,17 @@ class Explorecontroller extends GetxController {
     getCities(1, 4);
   }
 
-
   void selectRegion(String region) {
-    selectedRegion = region;
-    update();
+    selectedRegion.value = region;
   }
 
   Future<void> getCities(int pages, int limit) async {
     try {
-      isLoading = true;
-      update(); // Show loading indicator
+      if (pages == 1) {
+        isLoading.value = true;
+      } else {
+        isMoreLoading.value = true;
+      }
 
       var responseFromAPI = await ApiServcies().getMethod(
         ApiEndpoints.getCiteisurl(pages, limit),
@@ -45,16 +48,22 @@ class Explorecontroller extends GetxController {
 
       print("RAW API RESPONSE: $responseFromAPI");
 
+      responseModel.value = getCtiesModelFromJson(responseFromAPI);
 
-        responseModel = getCtiesModelFromJson(responseFromAPI);
-      for(var elements in responseModel.data!){
-        listofcities.add(elements);
+
+      if (pages == 1) {
+        listofcities.clear();
       }
-      isLoading = false;
-      update();
+
+      if (responseModel.value.data != null) {
+        listofcities.addAll(responseModel.value.data!);
+      }
+
+      isLoading.value = false;
+      isMoreLoading.value = false;
     } catch (e, stackTrace) {
-      isLoading = false;
-      update();
+      isLoading.value = false;
+      isMoreLoading.value = false;
       print("PARSING ERROR: $e");
       print(stackTrace);
 

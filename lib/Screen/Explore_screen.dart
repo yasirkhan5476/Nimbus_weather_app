@@ -1,14 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:minbus_weather_app/Components/MyTextfieldcomponent.dart';
 import 'package:minbus_weather_app/Controller/ExploreController.dart';
+import 'package:minbus_weather_app/Controller/SearchController.dart';
 import 'package:minbus_weather_app/Utils/Appicons.dart';
 
-class ExploreScreen extends StatelessWidget {
-  ExploreScreen({super.key});
+class ExploreScreen extends StatefulWidget {
+  const ExploreScreen({super.key});
 
-  // Register the controller
-  final Explorecontroller exploreController = Get.put(Explorecontroller());
+  @override
+  State<ExploreScreen> createState() => _ExploreScreenState();
+}
+
+class _ExploreScreenState extends State<ExploreScreen> {
+  late final Explorecontroller exploreController;
+   late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    exploreController = Get.put(Explorecontroller());
+
+  }
+
+  @override
+  void dispose() {
+
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,41 +87,33 @@ class ExploreScreen extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // Search bar
-              Container(
-                height: 52,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFDCE5F8)),
+              Mytextfieldcomponent(
+                hintText: "Search cities",
+                controller: _searchController,
+                prefixIcon: InkWell(
+                  onTap: (){
+                    Searchcontroller().getSearch(_searchController.text);
+                  },
+                    child: const Icon(Icons.search)
                 ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.search, color: Color(0xFF60769C)),
-                    SizedBox(width: 12),
-                    Text(
-                      'Search cities or countries...',
-                      style: TextStyle(fontSize: 14, color: Color(0xFF8B9BB8)),
-                    ),
-                  ],
-                ),
+
               ),
 
               const SizedBox(height: 16),
 
-              // Region filters wrapped in GetBuilder
+              // Region filters wrapped in Obx
               SizedBox(
                 height: 45,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  child: GetBuilder<Explorecontroller>(
-                    builder: (controller) => Row(
-                      children: controller.regions.map((region) {
-                        final bool selected = controller.selectedRegion == region;
+                  child: Obx(
+                        () => Row(
+                      children: exploreController.regions.map((region) {
+                        final bool selected =
+                            exploreController.selectedRegion.value == region;
 
                         return GestureDetector(
-                          onTap: () => controller.selectRegion(region),
+                          onTap: () => exploreController.selectRegion(region),
                           child: Container(
                             margin: const EdgeInsets.only(right: 8),
                             padding: const EdgeInsets.symmetric(
@@ -139,7 +151,7 @@ class ExploreScreen extends StatelessWidget {
 
               const SizedBox(height: 18),
 
-              // Cities heading & results count
+              // Cities heading & results count wrapped in Obx
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -151,9 +163,9 @@ class ExploreScreen extends StatelessWidget {
                       color: Color(0xFF102344),
                     ),
                   ),
-                  GetBuilder<Explorecontroller>(
-                    builder: (controller) => Text(
-                      '${controller.responseModel.data?.length ?? 0} results',
+                  Obx(
+                        () => Text(
+                      '${exploreController.listofcities.length} results',
                       style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                     ),
                   ),
@@ -162,74 +174,74 @@ class ExploreScreen extends StatelessWidget {
 
               const SizedBox(height: 14),
 
+              // Main List View / Loader wrapped in Obx
               Expanded(
-                child: GetBuilder<Explorecontroller>(
-                  builder: (controller) {
-                    if (controller.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+                child: Obx(() {
+                  if (exploreController.isLoading.value &&
+                      exploreController.listofcities.isEmpty) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                    final dataList = controller.responseModel.data ?? [];
-                    final meta = controller.responseModel.meta;
-                    int pagenumber = meta?.page ?? 0;
-                    int totalpages = meta?.totalPages ?? 0;
-                    int nextPages = pagenumber+1;
+                  final dataList = exploreController.listofcities;
+                  final meta = exploreController.responseModel.value.meta;
+                  int pagenumber = meta?.page ?? 1;
+                  int totalpages = meta?.totalPages ?? 1;
+                  int nextPages = pagenumber + 1;
 
-                    if (dataList.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          "No cities found",
-                          style: TextStyle(color: Color(0xFF7183A7), fontSize: 14),
-                        ),
-                      );
-                    }
+                  if (dataList.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        "No cities found",
+                        style: TextStyle(color: Color(0xFF7183A7), fontSize: 14),
+                      ),
+                    );
+                  }
 
-                    return ListView.builder(
-                      padding: EdgeInsets.zero,
-                      itemCount: dataList.length + 1,
-                      itemBuilder: (context, index) {
-                        // Load more section footer
-                        if (index == exploreController.listofcities!.length){
-                          return InkWell(
-                            onTap: (){
-                              exploreController.getCities(nextPages, 4);
-                            },
-                            child: Container(
-                              height: 48,
-                              margin: const EdgeInsets.only(top: 2, bottom: 16),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE2EBFF),
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                'Load more · page $pagenumber of $totalpages',
-                                style: const TextStyle(
-                                  color: Color(0xFF326BFF),
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                  return ListView.builder(
+                    padding: EdgeInsets.zero,
+                    itemCount: dataList.length + (pagenumber < totalpages ? 1 : 0),
+                    itemBuilder: (context, index) {
+
+                      if (index == dataList.length) {
+                        return InkWell(
+                          onTap: () {
+                            exploreController.getCities(nextPages, 4);
+                          },
+                          child: Container(
+                            height: 48,
+                            margin: const EdgeInsets.only(top: 2, bottom: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE2EBFF),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Load more · page $pagenumber of $totalpages',
+                              style: const TextStyle(
+                                color: Color(0xFF326BFF),
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          );
-                        }
-
-                        final city = exploreController.listofcities![index];
-
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: _buildCityCard(
-                            city: city.name ?? "",
-                            country: city.country ?? "",
-                            region: city.region ?? "",
-                            temperature: city.weather?.temperatureC?.toString() ?? "0",
-                            icon: city.weather?.condition?.icon ?? "",
                           ),
                         );
-                      },
-                    );
-                  },
-                ),
+                      }
+
+                      final city = dataList[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 14),
+                        child: _buildCityCard(
+                          city: city.name ?? "",
+                          country: city.country ?? "",
+                          region: city.region ?? "",
+                          temperature: city.weather?.temperatureC?.toString() ?? "0",
+                          icon: city.weather?.condition?.icon ?? "",
+                        ),
+                      );
+                    },
+                  );
+                }),
               ),
             ],
           ),
