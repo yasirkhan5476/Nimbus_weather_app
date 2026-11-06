@@ -61,11 +61,11 @@ class Explorecontroller extends GetxController {
 
       isLoading.value = false;
       isMoreLoading.value = false;
-    } catch (e, stackTrace) {
+    } catch (e) {
       isLoading.value = false;
       isMoreLoading.value = false;
       print("PARSING ERROR: $e");
-      print(stackTrace);
+
 
       Get.snackbar("Error", e.toString());
     }

@@ -46,7 +46,22 @@ class AuthenticationController extends GetxController{
       Get.offAll(()=>LoginScreen());
     } catch(e){
       isLoading.value = false;
-      Get.snackbar("Error", e.toString());
+
+      String errorMsg = e.toString().replaceAll("Exception: ", "");
+
+      if (errorMsg == "USER_EXISTS") {
+
+        Get.snackbar(
+          "Account Already Exists",
+          "An account with this email is already registered. Try logging in instead.",
+        );
+      } else {
+        // Standard error handling
+        Get.snackbar(
+          "Registration Failed",
+          errorMsg,
+        );
+      }
     }
   }
 }

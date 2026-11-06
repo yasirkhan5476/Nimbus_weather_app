@@ -32,7 +32,7 @@ class ApiServcies {
         case 404:
           throw Exception('Resource not found.');
         case 409:
-          throw Exception("User Exist");
+          throw Exception("USER_EXISTS");
         case 500:
         default:
           throw Exception('Server Error: ${response.statusCode}');
