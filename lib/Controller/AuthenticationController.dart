@@ -43,6 +43,9 @@ class AuthenticationController extends GetxController{
       Get.snackbar("Success", "User Logged In successfully!!");
       isLoading.value = false;
       print("Response From API " + responseFromAPI.toString());
+      String tokenAccess = jsonDecode(responseFromAPI)["token"];
+      // print("Access token ${tokenAccess}");
+      LocalStorageInstance.savedata(key:Localstoragekey.accessToken, dataToSave: tokenAccess);
       Get.offAll(()=>LoginScreen());
     } catch(e){
       isLoading.value = false;

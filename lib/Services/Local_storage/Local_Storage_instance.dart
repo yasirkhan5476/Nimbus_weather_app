@@ -11,4 +11,9 @@ class LocalStorageInstance {
    final box = GetStorage();
     return box.read(key)??"";
   }
+  static String deletedate({required String key}){
+    final box = GetStorage();
+    box.remove(key);
+    return key;
+  }
 }

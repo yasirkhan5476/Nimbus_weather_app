@@ -4,6 +4,12 @@ class ApiEndpoints {
 
   static String loginurl = "${baseurl}/auth/login";
   static String registerUrl = "${baseurl}/auth/register";
+  static String getregionurl = "${baseurl}/cities/karachi";
+
+  static String getCitiesdetails(String id){
+    return "$baseurl/cities/${id}";
+  }
+
   static String getCiteisurl(int page,int limit){
     return "${baseurl}/cities?page=${page}&limit=${limit}";
   }

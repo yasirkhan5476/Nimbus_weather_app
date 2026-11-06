@@ -9,9 +9,10 @@ class Mytextfieldcomponent extends StatefulWidget {
   final Widget? suffixIcon;
   final Widget? prefixIcon;
   final TextInputType keyboardType;
-  // Added dynamic validator parameter
   final FormFieldValidator<String>? validator;
-  final FormFieldBuilder<String>? onChanged;
+
+  // 1. Correct the type signature to ValueChanged<String>?
+  final ValueChanged<String>? onChanged;
 
   const Mytextfieldcomponent({
     super.key,
@@ -22,8 +23,8 @@ class Mytextfieldcomponent extends StatefulWidget {
     this.suffixIcon,
     this.prefixIcon,
     this.keyboardType = TextInputType.text,
-    this.validator, // Initialized here
-    this.onChanged
+    this.validator,
+    this.onChanged,
   });
 
   @override
@@ -55,12 +56,12 @@ class _MytextfieldcomponentState extends State<Mytextfieldcomponent> {
           ),
           const SizedBox(height: 8),
         ],
-        const SizedBox(height: 8),
         TextFormField(
           controller: widget.controller,
           obscureText: _obscureText,
           keyboardType: widget.keyboardType,
-          validator: widget.validator ,
+          validator: widget.validator,
+          onChanged: widget.onChanged,
           decoration: InputDecoration(
             hintText: widget.hintText,
             hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
@@ -91,7 +92,7 @@ class _MytextfieldcomponentState extends State<Mytextfieldcomponent> {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
-                color: Color(0xFF017A54),
+                color: Color(0xff2F6BFF),
                 width: 1.5,
               ),
             ),

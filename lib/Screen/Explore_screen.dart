@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide SearchController;
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 import 'package:minbus_weather_app/Components/MyTextfieldcomponent.dart';
@@ -15,18 +15,20 @@ class ExploreScreen extends StatefulWidget {
 
 class _ExploreScreenState extends State<ExploreScreen> {
   late final Explorecontroller exploreController;
-   late final TextEditingController _searchController;
+  late final TextEditingController _searchController;
+  late final SearchController searchController;
 
   @override
   void initState() {
     super.initState();
     exploreController = Get.put(Explorecontroller());
-
+    searchController = Get.put(SearchController());
+    _searchController = TextEditingController();
   }
 
   @override
   void dispose() {
-
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -87,16 +89,25 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
               const SizedBox(height: 16),
 
+              // Search field triggers ONLY when search icon or keyboard action is submitted
               Mytextfieldcomponent(
                 hintText: "Search cities",
                 controller: _searchController,
                 prefixIcon: InkWell(
-                  onTap: (){
-                    Searchcontroller().getSearch(_searchController.text);
+                  onTap: () {
+                    setState(() {}); // Updates UI to acknowledge non-empty query string
+                    searchController.getSearch(_searchController.text);
                   },
-                    child: const Icon(Icons.search)
+                  child: const Icon(Icons.search),
                 ),
-
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.clear, size: 20),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {});
+                    searchController.getSearch("");
+                  },
+                ),
               ),
 
               const SizedBox(height: 16),
@@ -151,7 +162,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
               const SizedBox(height: 18),
 
-              // Cities heading & results count wrapped in Obx
+              // Dynamic results count header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -163,12 +174,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       color: Color(0xFF102344),
                     ),
                   ),
-                  Obx(
-                        () => Text(
-                      '${exploreController.listofcities.length} results',
+                  Obx(() {
+                    final bool isSearching = _searchController.text.trim().isNotEmpty;
+                    final int count = isSearching
+                        ? searchController.listofsearchcities.length
+                        : exploreController.listofcities.length;
+
+                    return Text(
+                      '$count results',
                       style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                    ),
-                  ),
+                    );
+                  }),
                 ],
               ),
 
@@ -177,16 +193,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
               // Main List View / Loader wrapped in Obx
               Expanded(
                 child: Obx(() {
-                  if (exploreController.isLoading.value &&
+                  final bool isSearching = _searchController.text.trim().isNotEmpty;
+
+                  if (isSearching && searchController.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (!isSearching &&
+                      exploreController.isLoading.value &&
                       exploreController.listofcities.isEmpty) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  final dataList = exploreController.listofcities;
-                  final meta = exploreController.responseModel.value.meta;
-                  int pagenumber = meta?.page ?? 1;
-                  int totalpages = meta?.totalPages ?? 1;
-                  int nextPages = pagenumber + 1;
+                  final dataList = isSearching
+                      ? searchController.listofsearchcities
+                      : exploreController.listofcities;
 
                   if (dataList.isEmpty) {
                     return const Center(
@@ -197,12 +218,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     );
                   }
 
+                  final meta = exploreController.responseModel.value.meta;
+                  int pagenumber = meta?.page ?? 1;
+                  int totalpages = meta?.totalPages ?? 1;
+                  int nextPages = pagenumber + 1;
+                  bool showLoadMore = !isSearching && (pagenumber < totalpages);
+
                   return ListView.builder(
                     padding: EdgeInsets.zero,
-                    itemCount: dataList.length + (pagenumber < totalpages ? 1 : 0),
+                    itemCount: dataList.length + (showLoadMore ? 1 : 0),
                     itemBuilder: (context, index) {
-
-                      if (index == dataList.length) {
+                      if (showLoadMore && index == dataList.length) {
                         return InkWell(
                           onTap: () {
                             exploreController.getCities(nextPages, 4);
