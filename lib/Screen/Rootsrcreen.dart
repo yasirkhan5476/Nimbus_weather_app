@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:minbus_weather_app/Screen/Explore_screen.dart';
+import 'package:minbus_weather_app/Screen/Favourite_screen.dart';
 
 class Rootsrcreen extends StatefulWidget {
   const Rootsrcreen({super.key});
@@ -14,7 +15,7 @@ class _RootsrcreenState extends State<Rootsrcreen> {
   // Define your screen views here
   final List<Widget> _pages = [
    ExploreScreen(),
-    Center(child: Text("Expenses Screen")),
+   FavoritesScreen(),
     Center(child: Text("Student Todo Screen")),
     Center(child: Text("Settings / Profile Screen")),
   ];

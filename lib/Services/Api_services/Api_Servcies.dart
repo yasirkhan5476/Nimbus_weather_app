@@ -8,19 +8,70 @@ import 'package:minbus_weather_app/Services/Api_services/Header_services.dart';
 import 'package:minbus_weather_app/Services/Local_storage/Local_Storage_instance.dart';
 import 'package:minbus_weather_app/Services/Local_storage/LocalStoragekey.dart';
 class ApiServcies {
- 
-  getMethod(String completeUrl) async{
-    var response = await http.get(Uri.parse(completeUrl));
-    print("Complete url:  ${completeUrl}");
-    return getresponse(response);
+
+  Future<dynamic> patchMethod(String completeUrl, Map<String, dynamic> body, {bool requiresToken = true}) async {
+    try {
+      Map<String, String> headers = requiresToken
+          ? HeaderServices.HeaderwithTokenbearer()
+          : HeaderServices.HeaderwithApplication();
+
+      var response = await http.patch(
+        Uri.parse(completeUrl),
+        body: jsonEncode(body),
+        headers: headers,
+      );
+      return getresponse(response);
+    } catch (e) {
+      rethrow;
+    }
   }
-  postMethod(String completeUrl,Map<String,dynamic> Apibody) async {
-    bool? isAccessToken;
-    var response = await http.post(Uri.parse(completeUrl),
-      body: jsonEncode(Apibody),
-      headers: (isAccessToken ?? false) ? HeaderServices.HeaderwithApplication() : HeaderServices.HeaderwithTokenbearer(),
-    );
-    return getresponse(response);
+
+  Future<dynamic> deleteMethod(String completeUrl, {bool requiresToken = true}) async {
+    try {
+      Map<String, String> headers = requiresToken
+          ? HeaderServices.HeaderwithTokenbearer()
+          : HeaderServices.HeaderwithApplication();
+
+      var response = await http.delete(
+        Uri.parse(completeUrl),
+        headers: headers,
+      );
+      return getresponse(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+  getMethod(String completeUrl,{bool requiresToken = true}) async{
+    try {
+      Map<String, String> headers = requiresToken
+          ? HeaderServices.HeaderwithTokenbearer()
+          : HeaderServices.HeaderwithApplication();
+
+      print("Complete GET url: $completeUrl");
+      var response = await http.get(Uri.parse(completeUrl), headers: headers);
+      return getresponse(response);
+    } catch (e) {
+      print("GET Error: $e");
+      rethrow;
+    }
+  }
+  postMethod(String completeUrl,Map<String,dynamic> Apibody,{bool requiresToken= true}) async {
+    try {
+      Map<String, String> headers = requiresToken
+          ? HeaderServices.HeaderwithTokenbearer()
+          : HeaderServices.HeaderwithApplication();
+
+      print("Complete POST url: $completeUrl");
+      var response = await http.post(
+        Uri.parse(completeUrl),
+        body: jsonEncode(Apibody),
+        headers: headers,
+      );
+      return getresponse(response);
+    } catch (e) {
+      print("POST Error: $e");
+      rethrow;
+    }
   }
 }
   getresponse(http.Response response){
@@ -44,4 +95,5 @@ class ApiServcies {
         default:
           throw Exception('Server Error: ${response.statusCode}');
   }
+
 }

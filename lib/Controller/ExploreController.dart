@@ -32,42 +32,36 @@ class Explorecontroller extends GetxController {
 
   void selectRegion(String region) {
     selectedRegion.value = region;
+    listofcities.clear();
+    String queryRegion = (region == 'All') ? '' : region;
+    getCities(1, 4, region: queryRegion);
   }
 
-  Future<void> getCities(int pages, int limit) async {
+  Future<void> getCities(int pages, int limit,{String region = ''}) async {
     try {
+    isLoading.value=true;
+    String currentRegion = region ?? selectedRegion.value;
+    String queryRegion = (currentRegion == 'All') ? '' : currentRegion;
+    String endpoint = region.isEmpty?ApiEndpoints.getCiteisurl(pages, limit):ApiEndpoints.getCiteisurlbyregion(pages, limit,queryRegion);
+    var responseFromApi = await ApiServcies().getMethod(endpoint);
+
+    GetCtiesModel respVar = getCtiesModelFromJson(responseFromApi);
+    responseModel.value = respVar;
+
+    if (respVar.data != null) {
       if (pages == 1) {
-        isLoading.value = true;
+        listofcities.addAll(respVar.data!);
       } else {
-        isMoreLoading.value = true;
+        listofcities.addAll(respVar.data!);
       }
-
-      var responseFromAPI = await ApiServcies().getMethod(
-        ApiEndpoints.getCiteisurl(pages, limit),
-      );
-
-      print("RAW API RESPONSE: $responseFromAPI");
-
-      responseModel.value = getCtiesModelFromJson(responseFromAPI);
-
-
-      if (pages == 1) {
-        listofcities.clear();
-      }
-
-      if (responseModel.value.data != null) {
-        listofcities.addAll(responseModel.value.data!);
-      }
-
-      isLoading.value = false;
-      isMoreLoading.value = false;
+    }
     } catch (e) {
+
       isLoading.value = false;
       isMoreLoading.value = false;
       print("PARSING ERROR: $e");
-
-
       Get.snackbar("Error", e.toString());
+
     }
   }
 }

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:minbus_weather_app/Components/MyTextfieldcomponent.dart';
 import 'package:minbus_weather_app/Controller/ExploreController.dart';
 import 'package:minbus_weather_app/Controller/SearchController.dart';
+import 'package:minbus_weather_app/Screen/Citydetail_Screen.dart';
 import 'package:minbus_weather_app/Utils/Appicons.dart';
 
 class ExploreScreen extends StatefulWidget {
@@ -14,23 +15,8 @@ class ExploreScreen extends StatefulWidget {
 }
 
 class _ExploreScreenState extends State<ExploreScreen> {
-  late final Explorecontroller exploreController;
-  late final TextEditingController _searchController;
-  late final SearchController searchController;
-
-  @override
-  void initState() {
-    super.initState();
-    exploreController = Get.put(Explorecontroller());
-    searchController = Get.put(SearchController());
-    _searchController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
+  final Explorecontroller explorecontroller = Get.put(Explorecontroller());
+  final SearchController searchcontroller = Get.put(SearchController());
 
   @override
   Widget build(BuildContext context) {
@@ -89,23 +75,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
               const SizedBox(height: 16),
 
-              // Search field triggers ONLY when search icon or keyboard action is submitted
+              // Search field
               Mytextfieldcomponent(
                 hintText: "Search cities",
-                controller: _searchController,
-                prefixIcon: InkWell(
-                  onTap: () {
-                    setState(() {}); // Updates UI to acknowledge non-empty query string
-                    searchController.getSearch(_searchController.text);
-                  },
-                  child: const Icon(Icons.search),
-                ),
+                controller: searchcontroller.textEditingController,
+                onChanged: (value) {
+                  searchcontroller.getSearch(value);
+                },
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.clear, size: 20),
                   onPressed: () {
-                    _searchController.clear();
+                    searchcontroller.textEditingController.clear();
+                    searchcontroller.getSearch("");
                     setState(() {});
-                    searchController.getSearch("");
                   },
                 ),
               ),
@@ -119,12 +101,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   scrollDirection: Axis.horizontal,
                   child: Obx(
                         () => Row(
-                      children: exploreController.regions.map((region) {
+                      children: explorecontroller.regions.map((region) {
                         final bool selected =
-                            exploreController.selectedRegion.value == region;
+                            explorecontroller.selectedRegion.value == region;
 
                         return GestureDetector(
-                          onTap: () => exploreController.selectRegion(region),
+                          onTap: () => explorecontroller.selectRegion(region),
                           child: Container(
                             margin: const EdgeInsets.only(right: 8),
                             padding: const EdgeInsets.symmetric(
@@ -175,10 +157,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     ),
                   ),
                   Obx(() {
-                    final bool isSearching = _searchController.text.trim().isNotEmpty;
+                    final bool isSearching =
+                        searchcontroller.searchQuery.value.trim().isNotEmpty;
                     final int count = isSearching
-                        ? searchController.listofsearchcities.length
-                        : exploreController.listofcities.length;
+                        ? searchcontroller.listofSearchcities.length
+                        : explorecontroller.listofcities.length;
 
                     return Text(
                       '$count results',
@@ -193,21 +176,22 @@ class _ExploreScreenState extends State<ExploreScreen> {
               // Main List View / Loader wrapped in Obx
               Expanded(
                 child: Obx(() {
-                  final bool isSearching = _searchController.text.trim().isNotEmpty;
+                  final bool isSearching =
+                      searchcontroller.searchQuery.value.trim().isNotEmpty;
 
-                  if (isSearching && searchController.isLoading.value) {
+                  if (isSearching && searchcontroller.isLoading.value) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
                   if (!isSearching &&
-                      exploreController.isLoading.value &&
-                      exploreController.listofcities.isEmpty) {
+                      explorecontroller.isLoading.value &&
+                      explorecontroller.listofcities.isEmpty) {
                     return const Center(child: CircularProgressIndicator());
                   }
 
                   final dataList = isSearching
-                      ? searchController.listofsearchcities
-                      : exploreController.listofcities;
+                      ? searchcontroller.listofSearchcities
+                      : explorecontroller.listofcities;
 
                   if (dataList.isEmpty) {
                     return const Center(
@@ -218,7 +202,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     );
                   }
 
-                  final meta = exploreController.responseModel.value.meta;
+                  final meta = explorecontroller.responseModel.value.meta;
                   int pagenumber = meta?.page ?? 1;
                   int totalpages = meta?.totalPages ?? 1;
                   int nextPages = pagenumber + 1;
@@ -231,7 +215,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       if (showLoadMore && index == dataList.length) {
                         return InkWell(
                           onTap: () {
-                            exploreController.getCities(nextPages, 4);
+                            explorecontroller.getCities(
+                              nextPages,
+                              4,
+                              region: explorecontroller.selectedRegion.value,
+                            );
                           },
                           child: Container(
                             height: 48,
@@ -261,8 +249,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           city: city.name ?? "",
                           country: city.country ?? "",
                           region: city.region ?? "",
-                          temperature: city.weather?.temperatureC?.toString() ?? "0",
+                          temperature:
+                          city.weather?.temperatureC?.toString() ?? "0",
                           icon: city.weather?.condition?.icon ?? "",
+
                         ),
                       );
                     },
@@ -276,75 +266,82 @@ class _ExploreScreenState extends State<ExploreScreen> {
     );
   }
 
-  // City card builder method
+  // City card builder method with onTap callback
   Widget _buildCityCard({
     required String city,
     required String country,
     required String region,
     required String temperature,
     required String icon,
+
   }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: icon == 'rain'
-                  ? const Color(0xFFE5EDFF)
-                  : const Color(0xFFFFF2CC),
-              borderRadius: BorderRadius.circular(14),
+    return InkWell(
+      onTap: (){
+        Get.to(CityDetailScreen(cityName: city));
+      },
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: icon == 'rain'
+                    ? const Color(0xFFE5EDFF)
+                    : const Color(0xFFFFF2CC),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: icon == 'rain'
+                  ? SvgPicture.asset(Appicons.rain, width: 30, height: 30)
+                  : Icon(
+                icon == 'sun'
+                    ? Icons.wb_sunny_outlined
+                    : Icons.cloud_outlined,
+                size: 30,
+                color: const Color(0xFFFFB800),
+              ),
             ),
-            child: icon == 'rain'
-                ? SvgPicture.asset(Appicons.rain, width: 30, height: 30)
-                : Icon(
-              icon == 'sun'
-                  ? Icons.wb_sunny_outlined
-                  : Icons.cloud_outlined,
-              size: 30,
-              color: const Color(0xFFFFB800),
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  city,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF102344),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    city,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF102344),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$country · $region',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF7183A7),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$country · $region',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF7183A7),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Text(
-            "$temperature°",
-            style: const TextStyle(
-              fontSize: 23,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF102344),
+            Text(
+              "$temperature°",
+              style: const TextStyle(
+                fontSize: 23,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF102344),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -27,7 +27,12 @@ class MyApp extends StatelessWidget {
           title: 'First Method',
           theme: ThemeData(
             primarySwatch: Colors.blue,
-            textTheme: Typography.englishLike2018.apply(fontSizeFactor: 1.sp),
+
+            scaffoldBackgroundColor: const Color(0xFFF2F6FF),
+           fontFamily: GoogleFonts.soraTextTheme().toString(),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF326BFF),
+            ),
           ),
           home: child,
         );
