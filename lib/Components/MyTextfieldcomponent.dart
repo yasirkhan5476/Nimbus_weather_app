@@ -10,8 +10,6 @@ class Mytextfieldcomponent extends StatefulWidget {
   final Widget? prefixIcon;
   final TextInputType keyboardType;
   final FormFieldValidator<String>? validator;
-
-  // 1. Correct the type signature to ValueChanged<String>?
   final ValueChanged<String>? onChanged;
 
   const Mytextfieldcomponent({
@@ -68,16 +66,16 @@ class _MytextfieldcomponentState extends State<Mytextfieldcomponent> {
             prefixIcon: widget.prefixIcon,
             suffixIcon: widget.isPassword
                 ? IconButton(
-              icon: Icon(
-                _obscureText ? Icons.visibility_off : Icons.visibility,
-                color: Colors.grey,
-              ),
-              onPressed: () {
-                setState(() {
-                  _obscureText = !_obscureText;
-                });
-              },
-            )
+                    icon: Icon(
+                      _obscureText ? Icons.visibility_off : Icons.visibility,
+                      color: Colors.grey,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureText = !_obscureText;
+                      });
+                    },
+                  )
                 : widget.suffixIcon,
             filled: true,
             fillColor: Colors.white,

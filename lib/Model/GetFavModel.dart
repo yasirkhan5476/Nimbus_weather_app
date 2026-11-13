@@ -1,196 +1,124 @@
 // To parse this JSON data, do
 //
-//     final getFavModel = getFavModelFromJson(jsonString);
+//     final getFavorites = getFavoritesFromJson(jsonString);
 
-import 'package:meta/meta.dart';
 import 'dart:convert';
 
-GetFavModel getFavModelFromJson(String str) => GetFavModel.fromJson(json.decode(str));
+GetFavorites getFavoritesFromJson(String str) =>
+    GetFavorites.fromJson(json.decode(str));
 
-String getFavModelToJson(GetFavModel data) => json.encode(data.toJson());
+String getFavoritesToJson(GetFavorites data) => json.encode(data.toJson());
 
-class GetFavModel {
-  final List<FavouriteList> pokemon;
+class GetFavorites {
+  final List<FavoritesList>? data;
+  final Meta? meta;
 
-  GetFavModel({
-    required this.pokemon,
-  });
+  GetFavorites({this.data, this.meta});
 
-  factory GetFavModel.fromJson(Map<String, dynamic> json) => GetFavModel(
-    pokemon: List<FavouriteList>.from(json["pokemon"].map((x) => FavouriteList.fromJson(x))),
+  factory GetFavorites.fromJson(Map<String, dynamic> json) => GetFavorites(
+    data: json["data"] == null
+        ? []
+        : List<FavoritesList>.from(
+            json["data"]!.map((x) => FavoritesList.fromJson(x)),
+          ),
+    meta: json["meta"] == null ? null : Meta.fromJson(json["meta"]),
   );
 
   Map<String, dynamic> toJson() => {
-    "pokemon": List<dynamic>.from(pokemon.map((x) => x.toJson())),
+    "data": data == null
+        ? []
+        : List<dynamic>.from(data!.map((x) => x.toJson())),
+    "meta": meta?.toJson(),
   };
 }
 
-class FavouriteList {
-  final int id;
-  final String num;
-  final String name;
-  final String img;
-  final List<Type> type;
-  final String height;
-  final String weight;
-  final String candy;
-  final int candyCount;
-  final Egg egg;
-  final double spawnChance;
-  final double avgSpawns;
-  final String spawnTime;
-  final List<double> multipliers;
-  final List<Type> weaknesses;
-  final List<Evolution> nextEvolution;
-  final List<Evolution> prevEvolution;
+class FavoritesList {
+  final int? id;
+  final String? note;
+  final DateTime? createdAt;
+  final City? city;
 
-  FavouriteList({
-    required this.id,
-    required this.num,
-    required this.name,
-    required this.img,
-    required this.type,
-    required this.height,
-    required this.weight,
-    required this.candy,
-    required this.candyCount,
-    required this.egg,
-    required this.spawnChance,
-    required this.avgSpawns,
-    required this.spawnTime,
-    required this.multipliers,
-    required this.weaknesses,
-    required this.nextEvolution,
-    required this.prevEvolution,
-  });
+  FavoritesList({this.id, this.note, this.createdAt, this.city});
 
-  factory FavouriteList.fromJson(Map<String, dynamic> json) => FavouriteList(
+  factory FavoritesList.fromJson(Map<String, dynamic> json) => FavoritesList(
     id: json["id"],
-    num: json["num"],
-    name: json["name"],
-    img: json["img"],
-    type: List<Type>.from(json["type"].map((x) => typeValues.map[x]!)),
-    height: json["height"],
-    weight: json["weight"],
-    candy: json["candy"],
-    candyCount: json["candy_count"],
-    egg: eggValues.map[json["egg"]]!,
-    spawnChance: json["spawn_chance"]?.toDouble(),
-    avgSpawns: json["avg_spawns"]?.toDouble(),
-    spawnTime: json["spawn_time"],
-    multipliers: List<double>.from(json["multipliers"].map((x) => x?.toDouble())),
-    weaknesses: List<Type>.from(json["weaknesses"].map((x) => typeValues.map[x]!)),
-    nextEvolution: List<Evolution>.from(json["next_evolution"].map((x) => Evolution.fromJson(x))),
-    prevEvolution: List<Evolution>.from(json["prev_evolution"].map((x) => Evolution.fromJson(x))),
+    note: json["note"],
+    createdAt: json["createdAt"] == null
+        ? null
+        : DateTime.parse(json["createdAt"]),
+    city: json["city"] == null ? null : City.fromJson(json["city"]),
   );
 
   Map<String, dynamic> toJson() => {
     "id": id,
-    "num": num,
-    "name": name,
-    "img": img,
-    "type": List<dynamic>.from(type.map((x) => typeValues.reverse[x])),
-    "height": height,
-    "weight": weight,
-    "candy": candy,
-    "candy_count": candyCount,
-    "egg": eggValues.reverse[egg],
-    "spawn_chance": spawnChance,
-    "avg_spawns": avgSpawns,
-    "spawn_time": spawnTime,
-    "multipliers": List<dynamic>.from(multipliers.map((x) => x)),
-    "weaknesses": List<dynamic>.from(weaknesses.map((x) => typeValues.reverse[x])),
-    "next_evolution": List<dynamic>.from(nextEvolution.map((x) => x.toJson())),
-    "prev_evolution": List<dynamic>.from(prevEvolution.map((x) => x.toJson())),
+    "note": note,
+    "createdAt": createdAt?.toIso8601String(),
+    "city": city?.toJson(),
   };
 }
 
-enum Egg {
-  NOT_IN_EGGS,
-  OMANYTE_CANDY,
-  THE_10_KM,
-  THE_2_KM,
-  THE_5_KM
-}
+class City {
+  final String? id;
+  final String? name;
+  final String? country;
+  final Weather? weather;
 
-final eggValues = EnumValues({
-  "Not in Eggs": Egg.NOT_IN_EGGS,
-  "Omanyte Candy": Egg.OMANYTE_CANDY,
-  "10 km": Egg.THE_10_KM,
-  "2 km": Egg.THE_2_KM,
-  "5 km": Egg.THE_5_KM
-});
+  City({this.id, this.name, this.country, this.weather});
 
-class Evolution {
-  final String num;
-  final String name;
-
-  Evolution({
-    required this.num,
-    required this.name,
-  });
-
-  factory Evolution.fromJson(Map<String, dynamic> json) => Evolution(
-    num: json["num"],
+  factory City.fromJson(Map<String, dynamic> json) => City(
+    id: json["id"],
     name: json["name"],
+    country: json["country"],
+    weather: json["weather"] == null ? null : Weather.fromJson(json["weather"]),
   );
 
   Map<String, dynamic> toJson() => {
-    "num": num,
+    "id": id,
     "name": name,
+    "country": country,
+    "weather": weather?.toJson(),
   };
 }
 
-enum Type {
-  BUG,
-  DARK,
-  DRAGON,
-  ELECTRIC,
-  FAIRY,
-  FIGHTING,
-  FIRE,
-  FLYING,
-  GHOST,
-  GRASS,
-  GROUND,
-  ICE,
-  NORMAL,
-  POISON,
-  PSYCHIC,
-  ROCK,
-  STEEL,
-  WATER
+class Weather {
+  final double? temperatureC;
+  final Condition? condition;
+
+  Weather({this.temperatureC, this.condition});
+
+  factory Weather.fromJson(Map<String, dynamic> json) => Weather(
+    temperatureC: json["temperatureC"]?.toDouble(),
+    condition: json["condition"] == null
+        ? null
+        : Condition.fromJson(json["condition"]),
+  );
+
+  Map<String, dynamic> toJson() => {
+    "temperatureC": temperatureC,
+    "condition": condition?.toJson(),
+  };
 }
 
-final typeValues = EnumValues({
-  "Bug": Type.BUG,
-  "Dark": Type.DARK,
-  "Dragon": Type.DRAGON,
-  "Electric": Type.ELECTRIC,
-  "Fairy": Type.FAIRY,
-  "Fighting": Type.FIGHTING,
-  "Fire": Type.FIRE,
-  "Flying": Type.FLYING,
-  "Ghost": Type.GHOST,
-  "Grass": Type.GRASS,
-  "Ground": Type.GROUND,
-  "Ice": Type.ICE,
-  "Normal": Type.NORMAL,
-  "Poison": Type.POISON,
-  "Psychic": Type.PSYCHIC,
-  "Rock": Type.ROCK,
-  "Steel": Type.STEEL,
-  "Water": Type.WATER
-});
+class Condition {
+  final String? code;
+  final String? label;
+  final String? icon;
 
-class EnumValues<T> {
-  Map<String, T> map;
-  late Map<T, String> reverseMap;
+  Condition({this.code, this.label, this.icon});
 
-  EnumValues(this.map);
+  factory Condition.fromJson(Map<String, dynamic> json) =>
+      Condition(code: json["code"], label: json["label"], icon: json["icon"]);
 
-  Map<T, String> get reverse {
-    reverseMap = map.map((k, v) => MapEntry(v, k));
-    return reverseMap;
-  }
+  Map<String, dynamic> toJson() => {"code": code, "label": label, "icon": icon};
+}
+
+class Meta {
+  final int? total;
+
+  Meta({this.total});
+
+  factory Meta.fromJson(Map<String, dynamic> json) =>
+      Meta(total: json["total"]);
+
+  Map<String, dynamic> toJson() => {"total": total};
 }

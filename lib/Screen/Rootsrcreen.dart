@@ -16,8 +16,7 @@ class _RootsrcreenState extends State<Rootsrcreen> {
   final List<Widget> _pages = [
    ExploreScreen(),
    FavoritesScreen(),
-    Center(child: Text("Student Todo Screen")),
-    Center(child: Text("Settings / Profile Screen")),
+    
   ];
 
   @override
@@ -49,18 +48,14 @@ class _RootsrcreenState extends State<Rootsrcreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.account_balance_wallet_outlined),
             activeIcon: Icon(Icons.account_balance_wallet),
-            label: "Expenses",
+            label: "Favorites",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.school_outlined),
-            activeIcon: Icon(Icons.school),
-            label: "Students",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
+            icon: Icon(Icons.person),
             activeIcon: Icon(Icons.person),
-            label: "Profile",
+            label: "profile",
           ),
+         
         ],
       ),
     );

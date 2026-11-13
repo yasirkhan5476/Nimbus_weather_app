@@ -28,26 +28,41 @@ class CityDetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Top Navigation Bar
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _circleButton(
-                    Icons.arrow_back,
-                        () => Get.back(),
-                  ),
-                  Obx(
-                        () => _circleButton(
-                      controller.isFavorite.value
-                          ? Icons.favorite
-                          : Icons.favorite_border,
-                      controller.toggleFavorite,
-                      iconColor: controller.isFavorite.value
-                          ? Colors.red
-                          : Appcolors.navy,
-                    ),
-                  ),
-                ],
-              ),
+             // Inside your CityDetailScreen build method (Top Navigation Bar):
+Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    _circleButton(
+      Icons.arrow_back,
+      () => Get.back(),
+    ),
+    Obx(() {
+      // Show loading spinner if favorite API is in progress
+      if (controller.isLoadingFav.value) {
+        return Container(
+          width: 44.r,
+          height: 44.r,
+          padding: EdgeInsets.all(10.r),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+          ),
+          child: const CircularProgressIndicator(strokeWidth: 2),
+        );
+      }
+
+      return _circleButton(
+        controller.isFavorite.value
+            ? Icons.favorite
+            : Icons.favorite_border,
+        () => controller.toggleFavorite(note: "Saved from detail screen"), // Triggers your API
+        iconColor: controller.isFavorite.value
+            ? Colors.red
+            : Appcolors.navy,
+      );
+    }),
+  ],
+),
               SizedBox(height: 16.h),
 
               // Hero Weather Card

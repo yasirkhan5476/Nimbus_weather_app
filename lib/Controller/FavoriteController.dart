@@ -1,58 +1,89 @@
 import 'package:get/get.dart';
 import 'package:minbus_weather_app/Model/GetFavModel.dart';
+import 'package:minbus_weather_app/Services/Api_services/Api_Servcies.dart';
+import 'package:minbus_weather_app/Services/Api_services/Api_endpoints.dart';
 
-import '../Services/Api_services/Api_Servcies.dart';
-import '../Services/Api_services/Api_endpoints.dart';
+class FavoritesController extends GetxController {
+  RxBool isLoading = false.obs;
+  RxInt favoritesListLength = 0.obs;
+  RxBool isEditFavoriteLoading = false.obs;
+  RxBool isDeleteFavoriteLoading = false.obs;
 
-class Favoritecontroller extends GetxController {
-  RxBool isLoading = true.obs;
-  RxBool isfav = false.obs;
-
-  // Changed type from GetFavModel to FavouriteList
-  RxList<FavouriteList> favouriteslist = <FavouriteList>[].obs;
+  RxList<FavoritesList> favoritesList = <FavoritesList>[].obs;
 
   @override
   void onInit() {
     super.onInit();
-    getfavorites();
+    getFavoritesList();
   }
 
-  Future<void> getfavorites() async {
+  Future<void> getFavoritesList() async {
     try {
       isLoading.value = true;
-      favouriteslist.clear();
+      favoritesList.clear();
 
-      var responseFromApi = await ApiServcies().getMethod(
+      // FIXED: Use getMethod since fetching favorites is a GET request
+      var response = await ApiServcies().getMethod(
         ApiEndpoints.FavoriteUrl,
         requiresToken: true,
       );
 
-      if (responseFromApi != null) {
-        GetFavModel getfavModel = getFavModelFromJson(responseFromApi);
-
-
-        for (var element in getfavModel.pokemon) {
-          favouriteslist.add(element);
+      GetFavorites parsedResponse = getFavoritesFromJson(response);
+      if (parsedResponse.data != null) {
+        for (var city in parsedResponse.data!) {
+          favoritesList.add(city);
         }
       }
-    } catch (e) {
-      print("FAVORITES ERROR: $e");
-      Get.snackbar("Error", e.toString());
+      favoritesListLength.value = favoritesList.length;
+      print("Response From Favorites List ----> ${parsedResponse.toJson()}");
+      print("Length of Favorites List ----> ${favoritesListLength.value}");
+    } catch (e, stackTrace) {
+      print('Favorites List Error: $e');
+      print(stackTrace);
+      Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
     }
   }
-  // Future<void> removeFavorite(String favId) async {
-  //   try {
-  //     await ApiServcies().d(
-  //       "${ApiEndpoints.FavoriteUrl}/$favId",
-  //       requiresToken: true,
-  //     );
-  //     favouriteslist.removeWhere((item) => item.id.toString() == favId);
-  //     Get.snackbar("Success", "Removed from favorites!");
-  //   } catch (e) {
-  //     Get.snackbar("Error", e.toString());
-  //   }
-  // }
 
+  Future<void> editFavorite(String note, int favoriteId) async {
+    try {
+      print("Note: $note");
+      isEditFavoriteLoading.value = true;
+
+      await ApiServcies().patchMethod(
+        ApiEndpoints.editFavorite(favoriteId),
+        {"note": note},
+        requiresToken: true,
+      );
+
+      Get.snackbar("Success", "Favorite Edited Successfully");
+      await getFavoritesList(); // Refresh list to show updated note
+    } catch (e) {
+      Get.snackbar("Error", e.toString());
+    } finally {
+      isEditFavoriteLoading.value = false;
+    }
+  }
+
+  Future<void> deleteFavorite(int favoriteId) async {
+    try {
+      print("favoriteId: $favoriteId");
+      isDeleteFavoriteLoading.value = true;
+
+      // FIXED: Added deleteMethod back here
+      await ApiServcies().deleteMethod(
+        ApiEndpoints.deleteFavorite(favoriteId),
+        requiresToken: true,
+      );
+
+      favoritesList.removeWhere((item) => item.id == favoriteId);
+      favoritesListLength.value = favoritesList.length;
+      Get.snackbar("Success", "Favorite Deleted Successfully");
+    } catch (e) {
+      Get.snackbar("Error", e.toString());
+    } finally {
+      isDeleteFavoriteLoading.value = false;
+    }
+  }
 }

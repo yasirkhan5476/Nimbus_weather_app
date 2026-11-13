@@ -32,6 +32,7 @@ class CityDetailsController extends GetxController {
   RxBool isLoadingForecast = false.obs;
   RxBool isLoadingPlaces = false.obs;
   RxBool isLoadingFav = false.obs;
+    RxString cityId = ''.obs;
 
   // Data observables
   Rx<CityDetails?> cityDetails = Rx<CityDetails?>(null);
@@ -109,12 +110,61 @@ class CityDetailsController extends GetxController {
     }
   }
 
-  void toggleFavorite() {
-    isFavorite.value = !isFavorite.value;
-    if (isFavorite.value) {
-      Get.snackbar("Favorites", "Added to favorites!");
-    } else {
-      Get.snackbar("Favorites", "Removed from favorites!");
-    }
+  // Inside CityDetailsController
+// void toggleFavorite({String note = ""}) async {
+    
+
+//     if (!isFavorite.value) {
+      
+     
+//     } else {
+//       // Handle removal logic here if your API supports a delete endpoint for favorites, 
+//       // or simply flip the state locally.
+//       isFavorite.value = false;
+//       Get.snackbar("Favorites", "Removed from favorites!");
+//     }
+//   }
+   void toggleFavorite({String note = ""}) async {
+  if (cityId.value.isEmpty) {
+   
+      Get.snackbar("Error", "City ID not loaded yet. Please wait.");
+    );
+    return;
   }
+
+  isFavorite.value = !isFavorite.value;
+
+  if (isFavorite.value) {
+    await addFavorites(note);
+  } else {
+   
+      Get.snackbar("Favorites", "Removed from favorites!");
+    
+  }
+}
+
+Future<void> addFavorites(String note) async {
+  try {
+    isLoadingFav.value = true;
+    var responseFromAPI = await ApiServcies().postMethod(
+      ApiEndpoints.setFavoritesUrl,
+      {"cityId": cityId.value, "note": note},
+      requiresToken: true,
+    );
+
+    print("Response From API ${responseFromAPI.toJson()}");
+
+    // Successfully added
+    isFavorite.value = true;
+    
+  
+  } catch (e) {
+    // Revert state if API fails
+    isFavorite.value = false;
+    print(e.toString());
+  
+  } finally {
+    isLoadingFav.value = false;
+  }
+}
 }
