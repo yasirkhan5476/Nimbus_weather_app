@@ -15,6 +15,7 @@ class CityDetailScreen extends StatelessWidget {
 
   late final CityDetailsController controller = Get.put(
     CityDetailsController(cityName: cityName),
+    tag: cityName,
   );
 
   @override
@@ -28,41 +29,41 @@ class CityDetailScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Top Navigation Bar
-             // Inside your CityDetailScreen build method (Top Navigation Bar):
-Row(
-  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  children: [
-    _circleButton(
-      Icons.arrow_back,
-      () => Get.back(),
-    ),
-    Obx(() {
-      // Show loading spinner if favorite API is in progress
-      if (controller.isLoadingFav.value) {
-        return Container(
-          width: 44.r,
-          height: 44.r,
-          padding: EdgeInsets.all(10.r),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            shape: BoxShape.circle,
-          ),
-          child: const CircularProgressIndicator(strokeWidth: 2),
-        );
-      }
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _circleButton(
+                    Icons.arrow_back,
+                        () => Get.back(),
+                  ),
+                  Obx(() {
+                    if (controller.isLoadingFav.value) {
+                      return Container(
+                        width: 44.r,
+                        height: 44.r,
+                        padding: EdgeInsets.all(10.r),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const CircularProgressIndicator(strokeWidth: 2),
+                      );
+                    }
 
-      return _circleButton(
-        controller.isFavorite.value
-            ? Icons.favorite
-            : Icons.favorite_border,
-        () => controller.toggleFavorite(note: "Saved from detail screen"), // Triggers your API
-        iconColor: controller.isFavorite.value
-            ? Colors.red
-            : Appcolors.navy,
-      );
-    }),
-  ],
-),
+                    return _circleButton(
+                      controller.isFavorite.value
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                          () => controller.toggleFavorite(
+                        note: "Saved from detail screen",
+                      ),
+                      iconColor: controller.isFavorite.value
+                          ? Colors.red
+                          : Appcolors.navy,
+                    );
+                  }),
+                ],
+              ),
               SizedBox(height: 16.h),
 
               // Hero Weather Card
@@ -189,8 +190,8 @@ Row(
       child: Obx(() {
         final details = controller.cityDetails.value;
         final weather = controller.cityWeather.value;
-        final isLoading =
-            controller.isLoadingDetails.value || controller.isLoadingWeather.value;
+        final isLoading = controller.isLoadingDetails.value ||
+            controller.isLoadingWeather.value;
 
         final locationLine = [
           if (details?.country?.isNotEmpty ?? false) details!.country,

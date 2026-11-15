@@ -11,9 +11,19 @@ import 'package:minbus_weather_app/Utils/Appicons.dart';
 class FavoritesScreen extends StatelessWidget {
   FavoritesScreen({super.key});
 
-  final favController = Get.put(FavoritesController());
+  final FavoritesController favController = Get.put(FavoritesController());
   final TextEditingController noteController = TextEditingController();
-
+  String _getWeatherIcon(String? conditionCode) {
+    final code = (conditionCode ?? '').toLowerCase();
+    if (code.contains('rain')) {
+      return Appicons.rain;
+    } else if (code.contains('cloud')) {
+      return Appicons.Cloudy;
+    } else if (code.contains('sun') || code.contains('clear')) {
+      return Appicons.sun; // Or your sunny icon asset path
+    }
+    return Appicons.rain;
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,9 +37,32 @@ class FavoritesScreen extends StatelessWidget {
               _headers(),
               const SizedBox(height: 20),
               Expanded(
-                child: SingleChildScrollView(
-                  child: _favoritesListing(),
-                ),
+                child: Obx(() {
+                  if (favController.isLoading.value) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (favController.favoritesList.isEmpty) {
+                    return Center(
+                      child: Text(
+                        "No saved cities yet.",
+                        style: TextStyle(
+                          fontFamily: 'DM Sans',
+                          fontSize: 14,
+                          color: Appcolors.textSecondary,
+                        ),
+                      ),
+                    );
+                  }
+
+                  return RefreshIndicator(
+                    onRefresh: () => favController.getFavoritesList(),
+                    child: SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: _favoritesListing(),
+                    ),
+                  );
+                }),
               ),
             ],
           ),
@@ -44,12 +77,17 @@ class FavoritesScreen extends StatelessWidget {
     return Column(
       children: List.generate(favList.length, (index) {
         final place = favList[index];
+        final cityName = place.city?.name ?? 'Unknown City';
+        final temp = place.city?.weather?.temperatureC;
+        final title = temp != null ? "$cityName ${temp.round()}°" : cityName;
+        final finalCondition = place.city?.weather?.condition?.code;
+        final dynamicIcon = _getWeatherIcon(finalCondition);
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: _placeItem(
-            Appicons.rain,
-            "${place.city!.name} ${place.city!.weather!.temperatureC}°",
+            dynamicIcon,
+            title,
             place.note ?? '',
             place,
           ),
@@ -59,11 +97,11 @@ class FavoritesScreen extends StatelessWidget {
   }
 
   Widget _placeItem(
-    String icon,
-    String title,
-    String subtitle,
-    FavoritesList favoriteList,
-  ) {
+      String icon,
+      String title,
+      String subtitle,
+      FavoritesList favoriteList,
+      ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(15),
@@ -116,7 +154,7 @@ class FavoritesScreen extends StatelessWidget {
                           const SizedBox(width: 5),
                           Expanded(
                             child: Text(
-                              subtitle,
+                              subtitle.isEmpty ? "No note" : subtitle,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontFamily: 'DM Sans',
@@ -145,7 +183,7 @@ class FavoritesScreen extends StatelessWidget {
                       color: Appcolors.colorE4ECFF,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: SvgPicture.asset(Appicons.editIcon),
+                    child: const Icon(Icons.edit, size: 18),
                   ),
                 ),
 
@@ -162,7 +200,7 @@ class FavoritesScreen extends StatelessWidget {
                       color: Appcolors.colorFFE9EA,
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: SvgPicture.asset(Appicons.deleteIcon),
+                    child: const Icon(Icons.delete, size: 18, color: Colors.red),
                   ),
                 ),
               ],
@@ -189,11 +227,15 @@ class FavoritesScreen extends StatelessWidget {
                 color: Appcolors.colorFFE9EA,
                 borderRadius: BorderRadius.circular(50),
               ),
-              child: const Icon(Icons.delete_outline, size: 25, color: Colors.red),
+              child: const Icon(
+                Icons.delete_outline,
+                size: 25,
+                color: Colors.red,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
-              "Remove ${favoriteList.city!.name}?",
+              "Remove ${favoriteList.city?.name ?? 'city'}?",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Sora',
@@ -206,13 +248,13 @@ class FavoritesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 30),
             Text(
-              "This deletes “${favoriteList.note}” from your favorites.",
+              "This deletes “${favoriteList.note ?? ''}” from your favorites.",
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'DM Sans',
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                height: 1.0,
+                height: 1.2,
                 letterSpacing: 0.8,
                 color: Appcolors.textSecondary,
               ),
@@ -225,7 +267,9 @@ class FavoritesScreen extends StatelessWidget {
               height: 42,
               fontSize: 14,
               onButtonTap: () {
-                favController.deleteFavorite(favoriteList.id!);
+                if (favoriteList.id != null) {
+                  favController.deleteFavorite(favoriteList.id!);
+                }
                 Get.back();
               },
             ),
@@ -265,15 +309,17 @@ class FavoritesScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 5),
-            Text(
-              "${favController.favoritesList.length} saved cities",
-              style: TextStyle(
-                fontFamily: 'DM Sans',
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                height: 1.0,
-                letterSpacing: 0.80,
-                color: Appcolors.textSecondary,
+            Obx(
+                  () => Text(
+                "${favController.favoritesList.length} saved cities",
+                style: TextStyle(
+                  fontFamily: 'DM Sans',
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  height: 1.0,
+                  letterSpacing: 0.80,
+                  color: Appcolors.textSecondary,
+                ),
               ),
             ),
           ],
@@ -295,7 +341,6 @@ class FavoritesScreen extends StatelessWidget {
   }
 
   void openEditFavoritesBottomSheet(FavoritesList favoriteList) {
-    // Pre-populate controller with current note text
     noteController.text = favoriteList.note ?? '';
 
     Get.bottomSheet(
@@ -319,7 +364,7 @@ class FavoritesScreen extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    "Save to favorites",
+                    "Edit favorite note",
                     style: TextStyle(
                       fontFamily: 'Sora',
                       fontSize: 20,
@@ -337,12 +382,8 @@ class FavoritesScreen extends StatelessWidget {
                         color: Appcolors.colorECEBFA,
                         shape: BoxShape.circle,
                       ),
-                      padding: const EdgeInsets.all(15),
-                      child: SvgPicture.asset(
-                        Appicons.cancelIcon,
-                        width: 18,
-                        height: 18,
-                      ),
+                      padding: const EdgeInsets.all(10),
+                      child: const Icon(Icons.close, size: 20),
                     ),
                   ),
                 ],
@@ -365,7 +406,7 @@ class FavoritesScreen extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    "14/120",
+                    "${noteController.text.length}/120",
                     style: TextStyle(
                       fontFamily: 'DM Sans',
                       fontSize: 13,
@@ -378,7 +419,6 @@ class FavoritesScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 10),
-              // Fixed: Use 'controller' instead of 'textFieldController', removed non-existent 'borderColor'
               Mytextfieldcomponent(
                 hintText: "Add a note...",
                 controller: noteController,
@@ -386,15 +426,17 @@ class FavoritesScreen extends StatelessWidget {
               const SizedBox(height: 10),
               CustomButton(
                 buttonColor: Appcolors.color2F6BFF,
-                buttonText: "Save to favorites",
+                buttonText: "Save changes",
                 textColor: Appcolors.pureWhite,
-                prefixIcon: Icons.favorite_border,
+                prefixIcon: Icons.check,
                 iconSize: 18,
                 onButtonTap: () {
-                  favController.editFavorite(
-                    noteController.text,
-                    favoriteList.id!,
-                  );
+                  if (favoriteList.id != null) {
+                    favController.editFavorite(
+                      noteController.text,
+                      favoriteList.id!,
+                    );
+                  }
                   Get.back();
                 },
               ),
@@ -427,7 +469,7 @@ class FavoritesScreen extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: SvgPicture.asset(
-              Appicons.blueCloudIcon,
+              Appicons.rain,
               width: 24,
               height: 24,
             ),
@@ -454,7 +496,7 @@ class FavoritesScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "${favoriteList.city?.country ?? ''} · Europe",
+                  favoriteList.city?.country ?? '',
                   style: TextStyle(
                     fontFamily: 'DM Sans',
                     fontSize: 12,

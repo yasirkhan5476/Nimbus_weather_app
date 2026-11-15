@@ -1,4 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:minbus_weather_app/Model/GetFavModel.dart';
+import 'package:minbus_weather_app/Screen/Favourite_screen.dart';
+import 'package:minbus_weather_app/Screen/Rootsrcreen.dart';
 import 'package:minbus_weather_app/Services/Api_services/Api_Servcies.dart';
 import 'package:minbus_weather_app/Services/Api_services/Api_endpoints.dart';
 
@@ -16,6 +20,7 @@ class CityDetailsController extends GetxController {
     RegExp(r'\s+'),
     '-',
   );
+  RxList<FavoritesList> favlist = <FavoritesList>[].obs;
 
   @override
   void onInit() {
@@ -32,7 +37,7 @@ class CityDetailsController extends GetxController {
   RxBool isLoadingForecast = false.obs;
   RxBool isLoadingPlaces = false.obs;
   RxBool isLoadingFav = false.obs;
-    RxString cityId = ''.obs;
+  RxString cityId = ''.obs;
 
   // Data observables
   Rx<CityDetails?> cityDetails = Rx<CityDetails?>(null);
@@ -52,6 +57,10 @@ class CityDetailsController extends GetxController {
         responseFromAPI,
       );
       cityDetails.value = responseModel.data;
+
+      if (responseModel.data?.id != null) {
+        cityId.value = responseModel.data!.id.toString();
+      }
     } catch (e) {
       Get.snackbar("Error", e.toString());
     } finally {
@@ -110,61 +119,46 @@ class CityDetailsController extends GetxController {
     }
   }
 
-  // Inside CityDetailsController
-// void toggleFavorite({String note = ""}) async {
-    
-
-//     if (!isFavorite.value) {
-      
-     
-//     } else {
-//       // Handle removal logic here if your API supports a delete endpoint for favorites, 
-//       // or simply flip the state locally.
-//       isFavorite.value = false;
-//       Get.snackbar("Favorites", "Removed from favorites!");
-//     }
-//   }
-   void toggleFavorite({String note = ""}) async {
-  if (cityId.value.isEmpty) {
-   
+  // Triggered when Heart icon is clicked
+  void toggleFavorite({String note = "Saved from detail screen"}) async {
+    if (cityId.value.isEmpty) {
       Get.snackbar("Error", "City ID not loaded yet. Please wait.");
-    );
-    return;
+      return;
+    }
+
+    if (!isFavorite.value) {
+      await addFavorites(note);
+    } else {
+      Get.snackbar("Favorites", "Already in favorites!");
+    }
   }
 
-  isFavorite.value = !isFavorite.value;
+  Future<void> addFavorites(String note) async {
+    try {
+      isLoadingFav.value = true;
+      var responseFromAPI = await ApiServcies().postMethod(
+        ApiEndpoints.setFavoritesUrl,
+        {"cityId": cityId.value, "note": note},
+        requiresToken: true,
+      );
 
-  if (isFavorite.value) {
-    await addFavorites(note);
-  } else {
-   
-      Get.snackbar("Favorites", "Removed from favorites!");
-    
+      print("Response From API $responseFromAPI");
+
+      isFavorite.value = true; // Turns heart red
+      Get.snackbar("Success", "Favorites is added!");
+      Get.to(Rootsrcreen());
+    } catch (e) {
+      // Handle server 409 USER_EXISTS gracefully
+      if (e.toString().contains("USER_EXISTS")) {
+        isFavorite.value = true; // Turn heart red anyway since it's already saved
+        Get.snackbar("Info", "This city is already in your favorites.");
+      } else {
+        isFavorite.value = false;
+        Get.snackbar("Error", e.toString());
+      }
+      print(e.toString());
+    } finally {
+      isLoadingFav.value = false;
+    }
   }
-}
-
-Future<void> addFavorites(String note) async {
-  try {
-    isLoadingFav.value = true;
-    var responseFromAPI = await ApiServcies().postMethod(
-      ApiEndpoints.setFavoritesUrl,
-      {"cityId": cityId.value, "note": note},
-      requiresToken: true,
-    );
-
-    print("Response From API ${responseFromAPI.toJson()}");
-
-    // Successfully added
-    isFavorite.value = true;
-    
-  
-  } catch (e) {
-    // Revert state if API fails
-    isFavorite.value = false;
-    print(e.toString());
-  
-  } finally {
-    isLoadingFav.value = false;
-  }
-}
 }

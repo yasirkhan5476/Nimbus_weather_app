@@ -40,7 +40,7 @@ class ApiEndpoints {
     return "$baseurl/cities/$citySlug/places";
   }
   static String FavoriteUrl = "$baseurl/favorites";
-    static String setFavoritesUrl = "$baseurl/auth/favorites";
+  static String setFavoritesUrl = "$baseurl/favorites";
    static String editFavorite(int favoriteId) {
     return "$baseurl/favorites/$favoriteId";
   }
